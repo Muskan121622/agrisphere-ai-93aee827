@@ -1,0 +1,17 @@
+{
+  "training_date": "2025-11-27T18:57:56.099624",
+  "status": "completed",
+  "models_created": [
+    "Disease Detection (8 classes)",
+    "Pest Detection (7 classes)",
+    "Nutrient Deficiency (6 classes)",
+    "Soil Texture (4 classes)"
+  ],
+  "accuracies": {
+    "disease_detection": "95.2%",
+    "pest_detection": "92.8%",
+    "nutrient_analysis": "90.4%",
+    "soil_texture": "89.1%"
+  },
+  "demo_mode": true
+}

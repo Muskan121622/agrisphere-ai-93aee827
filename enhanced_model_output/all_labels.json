@@ -1,0 +1,35 @@
+{
+  "disease": [
+    "healthy",
+    "leaf_blight",
+    "leaf_rust",
+    "leaf_spot",
+    "stem_rot",
+    "fruit_rot",
+    "bacterial_wilt",
+    "viral_mosaic"
+  ],
+  "pest": [
+    "no_pest",
+    "aphids",
+    "caterpillars",
+    "beetles",
+    "mites",
+    "thrips",
+    "whiteflies"
+  ],
+  "nutrient": [
+    "sufficient",
+    "nitrogen_deficiency",
+    "phosphorus_deficiency",
+    "potassium_deficiency",
+    "iron_deficiency",
+    "magnesium_deficiency"
+  ],
+  "soil": [
+    "clay",
+    "sandy",
+    "loamy",
+    "silt"
+  ]
+}
