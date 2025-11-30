@@ -4,8 +4,17 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import AIChat from "@/components/AIChat";
+import { useAuthStore } from "@/store/authStore";
+import { useNavigate } from "react-router-dom";
 
 const Index = () => {
+  const { user, isAuthenticated, logout } = useAuthStore();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/');
+  };
 
   const features = [
     {
@@ -82,22 +91,27 @@ const Index = () => {
             whileHover={{ scale: 1.05 }}
             transition={{ type: "spring", stiffness: 400 }}
           >
-            <div className="w-10 h-10 bg-gradient-primary rounded-xl flex items-center justify-center shadow-glow-primary">
-              <span className="text-2xl">🌱</span>
-            </div>
+            <img
+              src="/Screenshot 2025-11-21 114200.png"
+              alt="AgriSphere AI Logo"
+              className="w-10 h-10 rounded-full object-cover shadow-glow-primary border-2 border-primary/30"
+            />
             <span className="text-2xl font-bold gradient-text">AgriSphere AI</span>
           </motion.div>
           
           <nav className="hidden md:flex items-center gap-6">
             {[
-              { name: "Disease Detection", path: "/disease-detection" },
-              { name: "Digital Twin", path: "/digital-twin" },
-              { name: "Yield Prediction", path: "/yield-prediction" },
-              { name: "IoT Monitoring", path: "/iot-monitoring" },
-              { name: "Marketplace", path: "/marketplace" },
-              { name: "Voice Assistant", path: "/voice-assistant" },
-              { name: "Dashboard", path: "/comprehensive-dashboard" }
-            ].map((item, i) => (
+              { name: "Home", path: "/", public: true },
+              { name: "Features", path: "#features", public: true },
+              { name: "How It Works", path: "#how-it-works", public: true },
+              { name: "Disease Detection", path: "/disease-detection", public: false },
+              { name: "Digital Twin", path: "/digital-twin", public: false },
+              { name: "Yield Prediction", path: "/yield-prediction", public: false },
+              { name: "IoT Monitoring", path: "/iot-monitoring", public: false },
+              { name: "Marketplace", path: "/marketplace", public: false },
+              { name: "Voice Assistant", path: "/voice-assistant", public: false },
+              { name: "Dashboard", path: "/comprehensive-dashboard", public: false }
+            ].filter(item => (item.public && !isAuthenticated) || (!item.public && isAuthenticated)).map((item, i) => (
               <motion.a
                 key={item.name}
                 href={item.path}
@@ -114,13 +128,33 @@ const Index = () => {
 
           <div className="flex items-center gap-3">
             <ThemeToggle />
-            <Button variant="outline" className="hidden md:inline-flex">
-              Login
-            </Button>
-            <Button className="bg-gradient-primary hover:shadow-glow-primary transition-all duration-300">
-              Get Started
-              <ArrowRight className="ml-2 w-4 h-4" />
-            </Button>
+            {!isAuthenticated && (
+              <>
+                <Button
+                  variant="outline"
+                  className="hidden md:inline-flex"
+                  onClick={() => navigate('/login')}
+                >
+                  Login
+                </Button>
+                <Button
+                  className="bg-gradient-primary hover:shadow-glow-primary transition-all duration-300"
+                  onClick={() => navigate('/signup')}
+                >
+                  Get Started
+                  <ArrowRight className="ml-2 w-4 h-4" />
+                </Button>
+              </>
+            )}
+            {isAuthenticated && (
+              <Button
+                variant="outline"
+                className="hidden md:inline-flex"
+                onClick={handleLogout}
+              >
+                Logout
+              </Button>
+            )}
           </div>
         </div>
       </motion.header>

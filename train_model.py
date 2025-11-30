@@ -31,7 +31,7 @@ MIN_SAMPLES_PER_CLASS = 800
 TARGET_ACCURACY = 0.95
 
 class PlantDiseaseTrainer:
-    def __init__(self, dataset_path="public/PlantVillage", output_dir="model_output"):
+    def __init__(self, dataset_path="dataset", output_dir="model_output"):
         self.dataset_path = Path(dataset_path)
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(exist_ok=True)

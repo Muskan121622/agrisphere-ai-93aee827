@@ -18,7 +18,7 @@ class OptimizedPlantDiseaseTrainer:
     def __init__(self):
         self.img_size = (224, 224)
         self.batch_size = 64  # Increased batch size
-        self.base_path = r"C:\Users\muska_ak5dqij\OneDrive\Desktop\agrispace\agrisphere-ai-93aee827\public"
+        self.base_path = r"C:\Users\muska_ak5dqij\OneDrive\Desktop\agrispace\agrisphere-ai-93aee827\dataset"
         self.output_dir = "optimized_model"
         self.max_samples_per_class = 2000  # Limit to prevent overly large dataset
         

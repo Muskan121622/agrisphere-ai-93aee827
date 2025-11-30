@@ -16,7 +16,7 @@ class EnhancedPlantDiseaseTrainer:
     def __init__(self):
         self.img_size = (224, 224)
         self.batch_size = 32
-        self.base_path = r"C:\Users\muska_ak5dqij\OneDrive\Desktop\agrispace\agrisphere-ai-93aee827\public"
+        self.base_path = r"C:\Users\muska_ak5dqij\OneDrive\Desktop\agrispace\agrisphere-ai-93aee827\dataset"
         self.output_dir = "enhanced_model_output"
         
         # Disease mapping for standardization

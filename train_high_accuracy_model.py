@@ -20,7 +20,7 @@ class HighAccuracyPlantDiseaseTrainer:
     def __init__(self):
         self.img_size = (224, 224)
         self.batch_size = 32
-        self.base_path =  r"C:\Users\muska_ak5dqij\OneDrive\Desktop\agrispace\agrisphere-ai-93aee827\public"
+        self.base_path =  r"C:\Users\muska_ak5dqij\OneDrive\Desktop\agri\agrisphere-ai-93aee827"
         self.output_dir = "high_accuracy_model"
         self.target_accuracy = 0.95
         self.min_samples_per_class = 800
@@ -134,7 +134,23 @@ class HighAccuracyPlantDiseaseTrainer:
         print("=" * 60)
         print("DATASET LOADING & CLEANING")
         print("=" * 60)
-        
+
+        # Check if dataset already exists with valid images before any cleanup
+        if os.path.exists("dataset"):
+            class_counts = {}
+            for class_name in ['healthy', 'leaf_blight', 'leaf_rust', 'leaf_spot', 'stem_rot', 'pest_infected', 'nutrient_deficiency']:
+                class_dir = f"dataset/{class_name}"
+                if os.path.exists(class_dir):
+                    images = [f for f in os.listdir(class_dir) if f.lower().endswith(('.jpg', '.jpeg', '.png'))]
+                    valid_images = [img for img in images if self.is_valid_image(os.path.join(class_dir, img))]
+                    class_counts[class_name] = len(valid_images)
+            if all(count > 0 for count in class_counts.values()) and len(class_counts) == 7:
+                print("Existing dataset found with valid images in all classes. Skipping cleaning and organization.")
+                print(f"\nClass counts:")
+                for class_name, count in sorted(class_counts.items()):
+                    print(f"   {class_name}: {count} images")
+                return class_counts
+
         # Safe dataset cleanup
         if os.path.exists("dataset"):
             try:
@@ -148,24 +164,24 @@ class HighAccuracyPlantDiseaseTrainer:
                             os.remove(os.path.join(root, file))
                         except:
                             pass
-        
+
         # Create dataset structure
         for class_name in ['healthy', 'leaf_blight', 'leaf_rust', 'leaf_spot', 'stem_rot', 'pest_infected', 'nutrient_deficiency']:
             os.makedirs(f"dataset/{class_name}", exist_ok=True)
-        
+
         class_counts = {}
         corrupted_count = 0
-        
+
         # Process PlantVillage dataset
         plantvillage_path = os.path.join(self.base_path, "PlantVillage")
         if os.path.exists(plantvillage_path):
             corrupted_count += self._process_source(plantvillage_path, class_counts, "PlantVillage")
-        
+
         # Process Archive (4) dataset
         archive_path = os.path.join(self.base_path, "archive (4)","data")
         if os.path.exists(archive_path):
             corrupted_count += self._process_source(archive_path, class_counts, "Archive")
-        
+
         # Remove empty classes
         final_classes = {}
         for class_name, count in class_counts.items():
@@ -175,15 +191,15 @@ class HighAccuracyPlantDiseaseTrainer:
                 print(f"Skipping empty class: {class_name}")
                 if os.path.exists(f"dataset/{class_name}"):
                     os.rmdir(f"dataset/{class_name}")
-        
+
         print(f"\nCleaning Summary:")
         print(f"   Corrupted/unreadable images removed: {corrupted_count}")
         print(f"   Valid classes: {len(final_classes)}")
-        
+
         print(f"\nClass counts after cleaning:")
         for class_name, count in sorted(final_classes.items()):
             print(f"   {class_name}: {count} images")
-        
+
         return final_classes
 
     def _process_source(self, source_path, class_counts, source_name):
@@ -316,7 +332,10 @@ class HighAccuracyPlantDiseaseTrainer:
         predictions = Dense(num_classes, activation='softmax')(x)
         
         model = Model(inputs=base_model.input, outputs=predictions)
-        
+
+        # Build the model to ensure proper initialization
+        model.build((None, 224, 224, 3))
+
         # Compile model
         model.compile(
             optimizer=Adam(learning_rate=0.0001),
@@ -387,10 +406,11 @@ class HighAccuracyPlantDiseaseTrainer:
         # Step 5: Training callbacks
         callbacks = [
             ModelCheckpoint(
-                os.path.join(self.output_dir, 'best_model.h5'),
+                os.path.join(self.output_dir, 'best_model'),
                 save_best_only=True,
                 monitor='val_accuracy',
-                mode='max'
+                mode='max',
+                save_format='tf'
             ),
             EarlyStopping(
                 patience=5,
@@ -484,7 +504,7 @@ class HighAccuracyPlantDiseaseTrainer:
         
         # Save model in multiple formats
         model.save(os.path.join(self.output_dir, 'model.h5'))
-        model.save(os.path.join(self.output_dir, 'saved_model'))
+        model.save(os.path.join(self.output_dir, 'saved_model'), save_format='tf')
         
         # Save label mapping
         labels = {v: k for k, v in train_generator.class_indices.items()}

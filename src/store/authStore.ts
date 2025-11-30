@@ -1,5 +1,14 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { auth } from '@/lib/firebase';
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+  updateProfile,
+  User as FirebaseUser
+} from 'firebase/auth';
 
 interface User {
   id: string;
@@ -11,20 +20,86 @@ interface User {
 interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
-  login: (user: User) => void;
-  logout: () => void;
+  loading: boolean;
+  login: (email: string, password: string) => Promise<void>;
+  signup: (email: string, password: string, name: string) => Promise<void>;
+  logout: () => Promise<void>;
+  initializeAuth: () => void;
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       user: null,
       isAuthenticated: false,
-      login: (user) => set({ user, isAuthenticated: true }),
-      logout: () => set({ user: null, isAuthenticated: false }),
+      loading: true,
+      login: async (email: string, password: string) => {
+        try {
+          const userCredential = await signInWithEmailAndPassword(auth, email, password);
+          const firebaseUser = userCredential.user;
+          const user: User = {
+            id: firebaseUser.uid,
+            name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
+            email: firebaseUser.email || '',
+            avatar: firebaseUser.photoURL || undefined,
+          };
+          set({ user, isAuthenticated: true, loading: false });
+        } catch (error) {
+          console.error('Login error:', error);
+          throw error;
+        }
+      },
+      signup: async (email: string, password: string, name: string) => {
+        try {
+          const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+          const firebaseUser = userCredential.user;
+          // Update display name
+          await updateProfile(firebaseUser, {
+            displayName: name,
+          });
+          const user: User = {
+            id: firebaseUser.uid,
+            name: name,
+            email: firebaseUser.email || '',
+            avatar: firebaseUser.photoURL || undefined,
+          };
+          set({ user, isAuthenticated: true, loading: false });
+        } catch (error) {
+          console.error('Signup error:', error);
+          throw error;
+        }
+      },
+      logout: async () => {
+        try {
+          await signOut(auth);
+          set({ user: null, isAuthenticated: false, loading: false });
+        } catch (error) {
+          console.error('Logout error:', error);
+          throw error;
+        }
+      },
+      initializeAuth: () => {
+        onAuthStateChanged(auth, (firebaseUser: FirebaseUser | null) => {
+          if (firebaseUser) {
+            const user: User = {
+              id: firebaseUser.uid,
+              name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
+              email: firebaseUser.email || '',
+              avatar: firebaseUser.photoURL || undefined,
+            };
+            set({ user, isAuthenticated: true, loading: false });
+          } else {
+            set({ user: null, isAuthenticated: false, loading: false });
+          }
+        });
+      },
     }),
     {
       name: 'auth-storage',
+      partialize: (state) => ({
+        user: state.user,
+        isAuthenticated: state.isAuthenticated,
+      }),
     }
   )
 );
