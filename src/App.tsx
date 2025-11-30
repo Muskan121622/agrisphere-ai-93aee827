@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -6,30 +6,48 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "@/providers/ThemeProvider";
 import { useAuthStore } from "@/store/authStore";
-import Index from "./pages/Index";
-import DiseaseDetection from "./pages/DiseaseDetection";
-import DigitalTwin from "./pages/DigitalTwin";
-import YieldPrediction from "./pages/YieldPrediction";
-import IoTMonitoring from "./pages/IoTMonitoring";
-import Marketplace from "./pages/Marketplace";
-import VoiceAssistant from "./pages/VoiceAssistant";
-import ComprehensiveDashboard from "./pages/ComprehensiveDashboard";
-import NotFound from "./pages/NotFound";
-import Login from "./components/Login";
-import Signup from "./components/Signup";
+
+// Lazy load pages for faster navigation
+const Index = lazy(() => import("./pages/Index"));
+const DiseaseDetection = lazy(() => import("./pages/DiseaseDetection"));
+const DigitalTwin = lazy(() => import("./pages/DigitalTwin"));
+const YieldPrediction = lazy(() => import("./pages/YieldPrediction"));
+const IoTMonitoring = lazy(() => import("./pages/IoTMonitoring"));
+const Marketplace = lazy(() => import("./pages/Marketplace"));
+const VoiceAssistant = lazy(() => import("./pages/VoiceAssistant"));
+const ComprehensiveDashboard = lazy(() => import("./pages/ComprehensiveDashboard"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const Login = lazy(() => import("./components/Login"));
+const Signup = lazy(() => import("./components/Signup"));
 
 const queryClient = new QueryClient();
+
+// Loading Screen Component
+const LoadingScreen = () => (
+  <div className="min-h-screen flex items-center justify-center bg-background">
+    <div className="text-center space-y-4">
+      <div className="relative">
+        <div className="animate-spin rounded-full h-16 w-16 border-4 border-primary border-t-transparent mx-auto"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-2xl">🌱</div>
+      </div>
+      <div className="space-y-2">
+        <p className="text-muted-foreground animate-pulse font-medium">Loading AgriSphere AI...</p>
+        <div className="flex gap-1 justify-center">
+          <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+          <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+          <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+        </div>
+      </div>
+    </div>
+  </div>
+);
 
 // Protected Route Component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, loading } = useAuthStore();
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
@@ -48,19 +66,23 @@ const App = () => {
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
-            <Route path="/disease-detection" element={<ProtectedRoute><DiseaseDetection /></ProtectedRoute>} />
-            <Route path="/digital-twin" element={<ProtectedRoute><DigitalTwin /></ProtectedRoute>} />
-            <Route path="/yield-prediction" element={<ProtectedRoute><YieldPrediction /></ProtectedRoute>} />
-            <Route path="/iot-monitoring" element={<ProtectedRoute><IoTMonitoring /></ProtectedRoute>} />
-            <Route path="/marketplace" element={<ProtectedRoute><Marketplace /></ProtectedRoute>} />
-            <Route path="/voice-assistant" element={<ProtectedRoute><VoiceAssistant /></ProtectedRoute>} />
-            <Route path="/comprehensive-dashboard" element={<ProtectedRoute><ComprehensiveDashboard /></ProtectedRoute>} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <Suspense fallback={<LoadingScreen />}>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
+              {/* Public routes for demo */}
+              <Route path="/digital-twin" element={<DigitalTwin />} />
+              <Route path="/disease-detection" element={<DiseaseDetection />} />
+              {/* Protected routes */}
+              <Route path="/yield-prediction" element={<ProtectedRoute><YieldPrediction /></ProtectedRoute>} />
+              <Route path="/iot-monitoring" element={<ProtectedRoute><IoTMonitoring /></ProtectedRoute>} />
+              <Route path="/marketplace" element={<ProtectedRoute><Marketplace /></ProtectedRoute>} />
+              <Route path="/voice-assistant" element={<ProtectedRoute><VoiceAssistant /></ProtectedRoute>} />
+              <Route path="/comprehensive-dashboard" element={<ProtectedRoute><ComprehensiveDashboard /></ProtectedRoute>} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
         </TooltipProvider>
       </ThemeProvider>
     </QueryClientProvider>

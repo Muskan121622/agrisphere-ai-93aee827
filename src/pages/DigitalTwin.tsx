@@ -4,7 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { DigitalTwinEngine } from "@/lib/digital-twin";
 import { GISDigitalTwin } from "@/lib/gis-digital-twin";
-import { useState, useEffect } from "react";
+import { useState, lazy, Suspense } from "react";
+
+// Lazy load the GIS Map component for better performance
+const GISMap = lazy(() => import("@/components/GISMap").then(module => ({ default: module.GISMap })));
 
 const DigitalTwin = () => {
   const [twinEngine] = useState(() => new DigitalTwinEngine());
@@ -12,9 +15,20 @@ const DigitalTwin = () => {
   const [farmData, setFarmData] = useState(null);
   const [gisData, setGisData] = useState(null);
   const [isInitializing, setIsInitializing] = useState(false);
+  const [hasInitialized, setHasInitialized] = useState(false);
 
   const initializeDemoFarm = async () => {
+    console.log('🚀 Digital Twin initialization started!');
+    
+    if (hasInitialized) {
+      // Scroll to map if already initialized
+      console.log('✅ Already initialized, scrolling to map...');
+      document.getElementById('gis-map-section')?.scrollIntoView({ behavior: 'smooth' });
+      return;
+    }
+
     setIsInitializing(true);
+    console.log('⏳ Initializing farm data...');
     
     try {
       // Demo farm coordinates (rectangular field in Bihar)
@@ -25,23 +39,35 @@ const DigitalTwin = () => {
         { lat: 26.1450, lng: 91.7360 }
       ];
       
+      console.log('📍 Farm coordinates set:', demoCoordinates);
+      
       // Initialize both traditional and GIS digital twins
       const [traditionalData, gisData] = await Promise.all([
         twinEngine.initializeFarm(demoCoordinates.map(c => [c.lng, c.lat])),
         gisEngine.initializeFarm('Demo Smart Farm', 'AgriSphere User', demoCoordinates)
       ]);
       
+      console.log('✅ Farm data initialized:', { traditionalData, gisData });
+      
       setFarmData(traditionalData);
       setGisData(gisData);
+      setHasInitialized(true);
       
       // Perform spatial analysis
       const spatialAnalysis = await gisEngine.performSpatialAnalysis();
-      console.log('Spatial Analysis Results:', spatialAnalysis);
+      console.log('📊 Spatial Analysis Results:', spatialAnalysis);
+      
+      // Scroll to map after initialization
+      setTimeout(() => {
+        console.log('🗺️ Scrolling to map section...');
+        document.getElementById('gis-map-section')?.scrollIntoView({ behavior: 'smooth' });
+      }, 500);
       
     } catch (error) {
-      console.error('Failed to initialize farm:', error);
+      console.error('❌ Failed to initialize farm:', error);
     } finally {
       setIsInitializing(false);
+      console.log('✅ Initialization complete!');
     }
   };
 
@@ -131,17 +157,63 @@ const DigitalTwin = () => {
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
               Create a complete digital replica of your farm with advanced GIS mapping, 
               multi-layer visualization, and real-time monitoring for precision agriculture.
+              <br/>
+              <span className="text-primary font-semibold mt-2 block">
+                ✨ Featuring: Farm Boundaries • Soil Zones • Irrigation Planning • Pest Risk Maps • NDVI Crop Health • Weather Stations
+              </span>
             </p>
             <div className="flex flex-wrap gap-4 justify-center">
-              <Button size="lg" className="bg-gradient-primary" onClick={initializeDemoFarm} disabled={isInitializing}>
-                <Map className="mr-2 w-5 h-5" />
-                {isInitializing ? 'Initializing...' : 'Create Digital Twin'}
+              <Button 
+                size="lg" 
+                className="bg-gradient-primary hover:scale-105 transition-transform cursor-pointer z-10 relative" 
+                onClick={initializeDemoFarm} 
+                disabled={isInitializing}
+              >
+                {isInitializing ? (
+                  <>
+                    <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent mr-2"></div>
+                    Initializing...
+                  </>
+                ) : (
+                  <>
+                    <Map className="mr-2 w-5 h-5" />
+                    {hasInitialized ? 'View Digital Twin' : 'Create Digital Twin'}
+                  </>
+                )}
               </Button>
-              <Button size="lg" variant="outline">
+              <Button 
+                size="lg" 
+                variant="outline" 
+                className="hover:scale-105 transition-transform cursor-pointer"
+                onClick={initializeDemoFarm}
+                disabled={isInitializing}
+              >
                 <Satellite className="mr-2 w-5 h-5" />
                 View Live Demo
               </Button>
             </div>
+            
+            {/* Loading Progress */}
+            {isInitializing && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-6 max-w-md mx-auto"
+              >
+                <div className="bg-primary/10 border border-primary/20 rounded-lg p-4">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-primary border-t-transparent"></div>
+                    <span className="text-sm font-medium text-primary">Creating your digital farm twin...</span>
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    • Mapping field boundaries<br/>
+                    • Analyzing soil zones<br/>
+                    • Planning irrigation systems<br/>
+                    • Detecting pest-prone areas
+                  </div>
+                </div>
+              </motion.div>
+            )}
           </motion.div>
         </div>
       </section>
@@ -200,6 +272,28 @@ const DigitalTwin = () => {
           </div>
         </div>
       </section>
+
+      {/* Interactive GIS Map */}
+      {gisData && (
+        <section id="gis-map-section" className="py-20 px-4 bg-gradient-to-br from-blue-50 to-green-50 dark:from-blue-950/20 dark:to-green-950/20">
+          <div className="container mx-auto">
+            <h2 className="text-4xl font-bold text-center mb-8">Interactive Farm Map</h2>
+            <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
+              Explore your farm with multi-layer GIS visualization. Click on zones for detailed information.
+            </p>
+            <Suspense fallback={
+              <div className="flex items-center justify-center py-20">
+                <div className="text-center space-y-4">
+                  <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mx-auto"></div>
+                  <p className="text-muted-foreground">Loading GIS Map...</p>
+                </div>
+              </div>
+            }>
+              <GISMap farmData={gisData} />
+            </Suspense>
+          </div>
+        </section>
+      )}
 
       {/* Live Farm Data */}
       {farmData && (
@@ -307,19 +401,20 @@ const DigitalTwin = () => {
       {/* Technology Stack */}
       <section className="py-20 px-4 bg-muted/30">
         <div className="container mx-auto text-center">
-          <h2 className="text-4xl font-bold mb-16">Powered by Advanced GIS Technology</h2>
+          <h2 className="text-4xl font-bold mb-4">Powered by Advanced GIS Technology</h2>
+          <p className="text-muted-foreground mb-12 max-w-2xl mx-auto">
+            Industry-leading mapping technologies combined with AI for next-generation precision agriculture
+          </p>
           <div className="grid md:grid-cols-4 gap-8 max-w-4xl mx-auto">
             {[
-              { name: "Mapbox GL JS", desc: "Interactive mapping" },
-              { name: "Leaflet", desc: "Open-source GIS" },
-              { name: "PostGIS", desc: "Spatial database" },
-              { name: "GDAL", desc: "Geospatial processing" }
+              { name: "Leaflet", desc: "Interactive GIS mapping", icon: "🗺️" },
+              { name: "Turf.js", desc: "Spatial analysis", icon: "📐" },
+              { name: "Satellite Imagery", desc: "Real-time field views", icon: "🛰️" },
+              { name: "NDVI Analysis", desc: "Crop health monitoring", icon: "🌿" }
             ].map((tech, i) => (
-              <div key={i} className="p-4">
-                <div className="w-16 h-16 mx-auto mb-3 rounded-full bg-gradient-primary flex items-center justify-center">
-                  <Map className="w-8 h-8 text-white" />
-                </div>
-                <h3 className="font-bold mb-1">{tech.name}</h3>
+              <div key={i} className="p-6 bg-card rounded-lg shadow-md hover:shadow-lg transition-shadow">
+                <div className="text-5xl mb-3">{tech.icon}</div>
+                <h3 className="font-bold mb-1 text-lg">{tech.name}</h3>
                 <p className="text-sm text-muted-foreground">{tech.desc}</p>
               </div>
             ))}

@@ -83,7 +83,14 @@ export class DigitalTwinEngine {
   }
 
   private createFarmBoundary(coordinates: [number, number][]): FarmBoundary {
-    const polygon = turf.polygon([coordinates]);
+    // Close the polygon by adding the first coordinate at the end
+    const closedCoords = [...coordinates];
+    if (closedCoords[0][0] !== closedCoords[closedCoords.length - 1][0] || 
+        closedCoords[0][1] !== closedCoords[closedCoords.length - 1][1]) {
+      closedCoords.push(closedCoords[0]);
+    }
+    
+    const polygon = turf.polygon([closedCoords]);
     const area = turf.area(polygon) / 10000; // Convert to hectares
 
     return {
@@ -97,7 +104,13 @@ export class DigitalTwinEngine {
     const soilTypes: Array<'clay' | 'sandy' | 'loamy' | 'silt'> = ['clay', 'sandy', 'loamy', 'silt'];
     
     // Divide farm into 4 soil zones for demo
-    const bbox = turf.bbox(turf.polygon([boundary.coordinates]));
+    // Close the polygon for bbox calculation
+    const closedBoundary = [...boundary.coordinates];
+    if (closedBoundary[0][0] !== closedBoundary[closedBoundary.length - 1][0] || 
+        closedBoundary[0][1] !== closedBoundary[closedBoundary.length - 1][1]) {
+      closedBoundary.push(closedBoundary[0]);
+    }
+    const bbox = turf.bbox(turf.polygon([closedBoundary]));
     const width = (bbox[2] - bbox[0]) / 2;
     const height = (bbox[3] - bbox[1]) / 2;
 
@@ -134,7 +147,12 @@ export class DigitalTwinEngine {
     const types: Array<'drip' | 'sprinkler' | 'flood' | 'manual'> = ['drip', 'sprinkler', 'flood'];
     
     // Create 3 irrigation zones
-    const bbox = turf.bbox(turf.polygon([boundary.coordinates]));
+    const closedBoundary = [...boundary.coordinates];
+    if (closedBoundary[0][0] !== closedBoundary[closedBoundary.length - 1][0] || 
+        closedBoundary[0][1] !== closedBoundary[closedBoundary.length - 1][1]) {
+      closedBoundary.push(closedBoundary[0]);
+    }
+    const bbox = turf.bbox(turf.polygon([closedBoundary]));
     const width = (bbox[2] - bbox[0]) / 3;
 
     for (let i = 0; i < 3; i++) {
@@ -165,7 +183,12 @@ export class DigitalTwinEngine {
     const riskLevels: Array<'low' | 'medium' | 'high'> = ['low', 'medium', 'high'];
 
     // Generate 2-3 pest-prone areas
-    const bbox = turf.bbox(turf.polygon([boundary.coordinates]));
+    const closedBoundary = [...boundary.coordinates];
+    if (closedBoundary[0][0] !== closedBoundary[closedBoundary.length - 1][0] || 
+        closedBoundary[0][1] !== closedBoundary[closedBoundary.length - 1][1]) {
+      closedBoundary.push(closedBoundary[0]);
+    }
+    const bbox = turf.bbox(turf.polygon([closedBoundary]));
     
     for (let i = 0; i < 3; i++) {
       const centerX = bbox[0] + Math.random() * (bbox[2] - bbox[0]);
@@ -199,7 +222,12 @@ export class DigitalTwinEngine {
       ['seedling', 'vegetative', 'flowering', 'fruiting'];
 
     // Divide farm into crop sections
-    const bbox = turf.bbox(turf.polygon([boundary.coordinates]));
+    const closedBoundary = [...boundary.coordinates];
+    if (closedBoundary[0][0] !== closedBoundary[closedBoundary.length - 1][0] || 
+        closedBoundary[0][1] !== closedBoundary[closedBoundary.length - 1][1]) {
+      closedBoundary.push(closedBoundary[0]);
+    }
+    const bbox = turf.bbox(turf.polygon([closedBoundary]));
     const width = (bbox[2] - bbox[0]) / 2;
     const height = (bbox[3] - bbox[1]) / 2;
 
