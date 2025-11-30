@@ -1,0 +1,23 @@
+{
+  "wheat_disease": {
+    "disease": "Wheat Rust",
+    "confidence": 0.94,
+    "severity": "high",
+    "treatment": "Apply Propiconazole fungicide",
+    "affected_part": "leaf"
+  },
+  "tomato_disease": {
+    "disease": "Tomato Blight",
+    "confidence": 0.91,
+    "severity": "medium",
+    "treatment": "Use Copper Oxychloride spray",
+    "affected_part": "leaf"
+  },
+  "pest_detection": {
+    "pest": "Aphids",
+    "confidence": 0.88,
+    "severity": "medium",
+    "treatment": "Apply Neem oil spray",
+    "affected_part": "leaf"
+  }
+}

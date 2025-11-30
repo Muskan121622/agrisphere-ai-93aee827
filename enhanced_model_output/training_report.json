@@ -1,17 +1,20 @@
 {
-  "training_date": "2025-11-27T18:57:56.099624",
+  "training_date": "2025-11-30T11:25:00.488791",
   "status": "completed",
   "models_created": [
     "Disease Detection (8 classes)",
     "Pest Detection (7 classes)",
     "Nutrient Deficiency (6 classes)",
-    "Soil Texture (4 classes)"
+    "Soil Texture (4 classes)",
+    "Yield Prediction Models"
   ],
   "accuracies": {
     "disease_detection": "95.2%",
     "pest_detection": "92.8%",
     "nutrient_analysis": "90.4%",
-    "soil_texture": "89.1%"
+    "soil_texture": "89.1%",
+    "yield_prediction": "R\u00b2 = 0.94"
   },
-  "demo_mode": true
+  "demo_mode": true,
+  "note": "Demo models created for AgriSphere AI showcase"
 }

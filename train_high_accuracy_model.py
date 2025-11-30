@@ -139,6 +139,16 @@ class HighAccuracyPlantDiseaseTrainer:
         print("DATASET LOADING & CLEANING")
         print("=" * 60)
 
+        
+        # Check if dataset exists but don't delete it
+        if os.path.exists("dataset"):
+            print("Dataset folder already exists. Using existing data to prevent deletion.")
+        else:
+            # Create dataset structure only if it doesn't exist
+            for class_name in ['healthy', 'leaf_blight', 'leaf_rust', 'leaf_spot', 'stem_rot', 'pest_infected', 'nutrient_deficiency']:
+                os.makedirs(f"dataset/{class_name}", exist_ok=True)
+
+
         # Check if dataset already exists with valid images before any cleanup
         if os.path.exists("dataset"):
             class_counts = {}
